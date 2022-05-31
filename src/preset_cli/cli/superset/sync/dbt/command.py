@@ -43,6 +43,7 @@ from preset_cli.exceptions import DatabaseNotFoundError
     help="Mark resources as manged externally to prevent edits",
 )
 @click.option("--external-url-prefix", default="", help="Base URL for resources")
+@click.option("--tags", default="", help="Tag for resources")
 @click.pass_context
 def dbt(  # pylint: disable=too-many-arguments
     ctx: click.core.Context,
@@ -54,6 +55,7 @@ def dbt(  # pylint: disable=too-many-arguments
     import_db: bool = False,
     disallow_edits: bool = True,
     external_url_prefix: str = "",
+    tags: str = "",
 ) -> None:
     """
     Sync DBT models/metrics to Superset and dashboards to DBT exposures.
@@ -85,6 +87,7 @@ def dbt(  # pylint: disable=too-many-arguments
         database,
         disallow_edits,
         external_url_prefix,
+        tags.split(',') if tags else []
     )
     if exposures:
         exposures = os.path.expanduser(exposures)

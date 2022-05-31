@@ -325,24 +325,34 @@ class SupersetClient:  # pylint: disable=too-many-public-methods
         operations = {
             k: v if isinstance(v, Operator) else Equal(v) for k, v in kwargs.items()
         }
-        query = prison.dumps(
-            {
-                "filters": [
-                    dict(col=col, opr=value.operator, value=value.value)
-                    for col, value in operations.items()
-                ],
-            },
-        )
-        url = self.baseurl / "api/v1" / resource_name / "" % {"q": query}
 
-        session = self.auth.get_session()
-        headers = self.auth.get_headers()
-        headers["Referer"] = str(self.baseurl)
-        response = session.get(url, headers=headers)
-        validate_response(response)
+        resources = []
+        page = 0
+        page_size = 100
+        has_data = True
+        while has_data:
+            query = prison.dumps(
+                {
+                    "filters": [
+                        dict(col=col, opr=value.operator, value=value.value)
+                        for col, value in operations.items()
+                    ],
+                    "page": page,
+                    "page_size": page_size
+                },
+            )
+            url = self.baseurl / "api/v1" / resource_name / "" % {"q": query}
+            print(url)
+            session = self.auth.get_session()
+            headers = self.auth.get_headers()
+            headers["Referer"] = str(self.baseurl)
+            response = session.get(url, headers=headers)
+            validate_response(response)
 
-        payload = response.json()
-        resources = payload["result"]
+            payload = response.json()
+            resources.extend(payload["result"])
+            page += 1
+            has_data = len(payload["result"]) == page_size
 
         return resources
 

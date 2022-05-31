@@ -25,6 +25,9 @@ def get_metric_expression(metric: Dict[str, Any]) -> str:
     """
     return "{type}({sql})".format(**metric)
 
+def is_match_tags(include_tags, tags):
+    has_include_tags = (include_tags and bool(set(include_tags) & set(tags))) or not include_tags
+    return has_include_tags
 
 def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
     client: SupersetClient,
@@ -32,6 +35,7 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
     database: Any,
     disallow_edits: bool,
     external_url_prefix: str,
+    tags: [str],
 ) -> List[Any]:
     """
     Read the DBT manifest and import models as datasets with metrics.
@@ -51,6 +55,11 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
     datasets = []
     configs = list(manifest["sources"].values()) + list(manifest["nodes"].values())
     for config in configs:
+
+        model_tags = config['tags']
+        if not is_match_tags(tags, model_tags) or config["resource_type"] not in ["model", "source"]:
+            continue
+
         filters = {
             "database": OneToMany(database["id"]),
             "schema": config["schema"],
@@ -94,6 +103,15 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
                         **metric["meta"],
                     },
                 )
+            dataset_metrics.append(
+                {
+                    "expression": 'count(*)',
+                    "metric_name": 'count',
+                    "metric_type": 'count',
+                    "verbose_name": 'count(*)',
+                    "description": '',
+                },
+            )
 
         # update dataset clearing metrics...
         update = {

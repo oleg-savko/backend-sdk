@@ -24,6 +24,8 @@ def build_sqlalchemy_params(target: Dict[str, Any]) -> Dict[str, Any]:
 
     if type_ in {"postgres", "redshift"}:
         return build_postgres_sqlalchemy_params(target)
+    if type_ == 'clickhouse':
+        return build_clickhouse_sqlalchemy_params(target)
     if type_ == "bigquery":
         return build_bigquery_sqlalchemy_params(target)
 
@@ -53,6 +55,33 @@ def build_postgres_sqlalchemy_params(target: Dict[str, Any]) -> Dict[str, Any]:
         "sqlalchemy_uri": str(
             URL(
                 drivername="postgresql+psycopg2",
+                username=username,
+                password=password,
+                host=host,
+                port=port,
+                database=dbname,
+                query=query,
+            ),
+        ),
+    }
+
+
+def build_clickhouse_sqlalchemy_params(target: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Build the SQLAlchemy URI for a Clickhouse target.
+    """
+    username = target["user"]
+    password = target["password"] or None
+    host = target["host"]
+    port = target["port"]
+    dbname = target["schema"]
+
+    query = {"sslmode": target["sslmode"]} if "sslmode" in target else None
+
+    return {
+        "sqlalchemy_uri": str(
+            URL(
+                drivername="clickhouse+native",
                 username=username,
                 password=password,
                 host=host,

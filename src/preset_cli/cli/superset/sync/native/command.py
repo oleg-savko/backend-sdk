@@ -111,8 +111,12 @@ def native(  # pylint: disable=too-many-locals, too-many-arguments
             queue.extend(path_name.glob("*"))
         elif path_name.suffix.lower() in YAML_EXTENSIONS:
             with open(path_name, encoding="utf-8") as input_:
-                template = Template(input_.read())
-                content = template.render(**env)
+                content = input_.read()
+                try:
+                    template = Template(content)
+                    content = template.render(**env)
+                except:
+                    print(f'Error during parsing template: {path_name}')
                 relative_path = path_name.relative_to(root)
 
                 # mark resource as being managed externally
@@ -140,10 +144,14 @@ def prompt_for_passwords(path: Path, config: Dict[str, Any]) -> None:
     """
     uri = config["sqlalchemy_uri"]
     password = make_url(uri).password
-    if password == PASSWORD_MASK and config.get("password") is None:
-        config["password"] = getpass.getpass(
-            f"Please provide the password for {path}: ",
-        )
+
+
+    database_name = config.get("database_name")
+    # TODO
+    # if password == PASSWORD_MASK and config.get("password") is None:
+    #     config["password"] = getpass.getpass(
+    #         f"Please provide the password for {path}: ",
+    #     )
 
 
 def import_resource(
