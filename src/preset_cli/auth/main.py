@@ -5,7 +5,6 @@ Mechanisms for authentication and authorization.
 from typing import Dict, Optional
 
 import requests
-from bs4 import BeautifulSoup
 from yarl import URL
 
 
@@ -41,23 +40,23 @@ class UsernamePasswordAuth(Auth):  # pylint: disable=too-few-public-methods
         self._do_login(baseurl, username, password)
 
     def _do_login(
-        self,
-        baseurl: URL,
-        username: str,
-        password: Optional[str] = None,
+            self,
+            baseurl: URL,
+            username: str,
+            password: Optional[str] = None,
     ) -> None:
         """
-        Login to get CSRF token and cookies.
+        Login via api.
         """
-        response = self.session.get(baseurl / "login/")
-        soup = BeautifulSoup(response.text, "html.parser")
-        csrf_token = soup.find("input", {"id": "csrf_token"})["value"]
-
-        # update headers
-        self.headers["X-CSRFToken"] = csrf_token
-
-        # set cookies
-        self.session.post(
-            baseurl / "login/",
-            data=dict(username=username, password=password, csrf_token=csrf_token),
+        login_response = self.session.post(
+            baseurl / "api/v1/security/login",
+            json={
+                "username": username,
+                "password": password,
+                "provider": "db",
+                "refresh": True,
+            },
         )
+        access_token = login_response.json()['access_token']
+
+        self.headers = {"Authorization": f"Bearer {access_token}"}
