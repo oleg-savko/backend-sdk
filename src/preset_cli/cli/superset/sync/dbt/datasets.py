@@ -98,7 +98,7 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
                         "expression": get_metric_expression(metric),
                         "metric_name": metric["name"],
                         "metric_type": metric["type"],
-                        "verbose_name": get_metric_expression(metric),
+                        "verbose_name": metric["label"],
                         "description": metric["description"],
                         **metric["meta"],
                     },
@@ -131,7 +131,6 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
                 "metrics": dataset_metrics,
             }
             client.update_dataset(dataset["id"], **update)
-
         datasets.append(dataset)
 
     return datasets
