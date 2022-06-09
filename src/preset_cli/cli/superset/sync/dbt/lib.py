@@ -210,3 +210,8 @@ def load_profiles(path: Path, project_name: str, target_name: str) -> Dict[str, 
         return config
 
     return apply_templating(profiles)
+
+
+def is_match_tags(include_tags, tags):
+    has_include_tags = (include_tags and bool(set(include_tags) & set(tags))) or not include_tags
+    return has_include_tags

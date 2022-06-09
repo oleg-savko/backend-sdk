@@ -13,6 +13,7 @@ from preset_cli.api.clients.superset import SupersetClient
 from preset_cli.cli.superset.sync.dbt.databases import sync_database
 from preset_cli.cli.superset.sync.dbt.datasets import sync_datasets
 from preset_cli.cli.superset.sync.dbt.exposures import sync_exposures
+from preset_cli.cli.superset.sync.dbt.roles import sync_roles
 from preset_cli.exceptions import DatabaseNotFoundError
 
 
@@ -43,7 +44,13 @@ from preset_cli.exceptions import DatabaseNotFoundError
     help="Mark resources as manged externally to prevent edits",
 )
 @click.option("--external-url-prefix", default="", help="Base URL for resources")
-@click.option("--tags", default="", help="Tag for resources")
+@click.option("--tags", default=[], help="Tag for resources", multiple=True)
+@click.option(
+    "--sync-dbt-tags-as-roles",
+    is_flag=True,
+    default=False,
+    help="Sync Dbt tags as superset roles",
+)
 @click.pass_context
 def dbt(  # pylint: disable=too-many-arguments
     ctx: click.core.Context,
@@ -55,7 +62,8 @@ def dbt(  # pylint: disable=too-many-arguments
     import_db: bool = False,
     disallow_edits: bool = True,
     external_url_prefix: str = "",
-    tags: str = "",
+    tags: [str] = [],
+    sync_dbt_tags_as_roles: bool = False,
 ) -> None:
     """
     Sync DBT models/metrics to Superset and dashboards to DBT exposures.
@@ -87,8 +95,16 @@ def dbt(  # pylint: disable=too-many-arguments
         database,
         disallow_edits,
         external_url_prefix,
-        tags.split(',') if tags else []
+        tags
     )
     if exposures:
         exposures = os.path.expanduser(exposures)
         sync_exposures(client, Path(exposures), datasets)
+
+    if sync_dbt_tags_as_roles:
+        sync_roles(
+            client,
+            Path(manifest),
+            database,
+            tags
+        )

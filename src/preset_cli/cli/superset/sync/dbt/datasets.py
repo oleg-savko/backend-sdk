@@ -11,10 +11,10 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import yaml
-from yarl import URL
-
 from preset_cli.api.clients.superset import SupersetClient
 from preset_cli.api.operators import OneToMany
+from preset_cli.cli.superset.sync.dbt.lib import is_match_tags
+from yarl import URL
 
 _logger = logging.getLogger(__name__)
 
@@ -25,17 +25,14 @@ def get_metric_expression(metric: Dict[str, Any]) -> str:
     """
     return "{type}({sql})".format(**metric)
 
-def is_match_tags(include_tags, tags):
-    has_include_tags = (include_tags and bool(set(include_tags) & set(tags))) or not include_tags
-    return has_include_tags
 
 def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
-    client: SupersetClient,
-    manifest_path: Path,
-    database: Any,
-    disallow_edits: bool,
-    external_url_prefix: str,
-    tags: [str],
+        client: SupersetClient,
+        manifest_path: Path,
+        database: Any,
+        disallow_edits: bool,
+        external_url_prefix: str,
+        tags: [str],
 ) -> List[Any]:
     """
     Read the DBT manifest and import models as datasets with metrics.

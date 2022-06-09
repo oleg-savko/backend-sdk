@@ -522,3 +522,19 @@ class SupersetClient:  # pylint: disable=too-many-public-methods
         payload = response.json()
 
         return payload["message"] == "OK"
+
+    def sync_role(self, **kwargs: Any):
+        """
+        Sync Role.
+        """
+        url = self.baseurl / "api/v1/security/sync_role/"
+
+        session = self.auth.get_session()
+        headers = self.auth.get_headers()
+        headers["Referer"] = str(self.baseurl)
+        response = session.post(url, json=kwargs, headers=headers)
+        validate_response(response)
+
+        resource = response.json()
+
+        return resource
