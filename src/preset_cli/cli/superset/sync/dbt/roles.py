@@ -43,6 +43,7 @@ def sync_roles(  # pylint: disable=too-many-locals, too-many-branches
 
     for role, datasources in role_map.items():
         role_name = f"[{db_name}] {role}"
+        _logger.info(f"Start sync Role {role_name}: {datasources}")
         client.sync_role(name=role_name, datasources=datasources)
         _logger.info(f"Role {role_name} synced: {datasources}")
 

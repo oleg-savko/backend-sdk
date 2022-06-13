@@ -87,7 +87,13 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
         else:  # config["resource_type"] == "model"
             extra["depends_on"] = "ref('{name}')".format(**config)
 
-        dataset_metrics = []
+        dataset_metrics = [{
+            "expression": 'count(*)',
+            "metric_name": 'count',
+            "metric_type": 'count',
+            "verbose_name": 'count(*)',
+            "description": '',
+        }]
         if config["resource_type"] == "model":
             for metric in metrics[config["unique_id"]]:
                 dataset_metrics.append(
@@ -100,15 +106,6 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
                         **metric["meta"],
                     },
                 )
-            dataset_metrics.append(
-                {
-                    "expression": 'count(*)',
-                    "metric_name": 'count',
-                    "metric_type": 'count',
-                    "verbose_name": 'count(*)',
-                    "description": '',
-                },
-            )
 
         # update dataset clearing metrics...
         update = {
