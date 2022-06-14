@@ -439,11 +439,11 @@ class SupersetClient:  # pylint: disable=too-many-public-methods
         """
         return self.create_resource("dataset", **kwargs)
 
-    def update_dataset(self, dataset_id: int, **kwargs: Any) -> Any:
+    def update_dataset(self, dataset_id: int, query_args = None, **kwargs: Any) -> Any:
         """
         Update a dataset.
         """
-        return self.update_resource("dataset", dataset_id, **kwargs)
+        return self.update_resource("dataset", dataset_id, query_args, **kwargs)
 
     def get_chart(self, chart_id: int) -> Any:
         """

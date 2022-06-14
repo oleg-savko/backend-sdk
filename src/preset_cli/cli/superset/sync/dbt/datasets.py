@@ -87,13 +87,8 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
         else:  # config["resource_type"] == "model"
             extra["depends_on"] = "ref('{name}')".format(**config)
 
-        dataset_metrics = [{
-            "expression": 'count(*)',
-            "metric_name": 'count',
-            "metric_type": 'count',
-            "verbose_name": 'count(*)',
-            "description": '',
-        }]
+        dataset_metrics = [
+        ]
         if config["resource_type"] == "model":
             for metric in metrics[config["unique_id"]]:
                 dataset_metrics.append(
@@ -112,19 +107,14 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
             "description": config["description"],
             "extra": json.dumps(extra),
             "is_managed_externally": disallow_edits,
-            "metrics": [],
+            "metrics": dataset_metrics
         }
         if base_url:
             fragment = "!/{resource_type}/{unique_id}".format(**config)
             update["external_url"] = str(base_url.with_fragment(fragment))
-        client.update_dataset(dataset["id"], **update)
+        query_args = {"override_columns": "true"}
+        client.update_dataset(dataset["id"], query_args, **update)
 
-        # ...then update metrics
-        if dataset_metrics:
-            update = {
-                "metrics": dataset_metrics,
-            }
-            client.update_dataset(dataset["id"], **update)
         datasets.append(dataset)
 
     return datasets
