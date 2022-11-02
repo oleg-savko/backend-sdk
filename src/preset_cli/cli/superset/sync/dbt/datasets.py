@@ -23,7 +23,7 @@ def get_metric_expression(metric: Dict[str, Any]) -> str:
     """
     Return a SQL expression for a given DBT metric.
     """
-    return "{type}({sql})".format(**metric)
+    return "{calculation_method}({expression})".format(**metric)
 
 
 def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
@@ -32,7 +32,7 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
         database: Any,
         disallow_edits: bool,
         external_url_prefix: str,
-        tags: [str],
+        tags: List[str],
 ) -> List[Any]:
     """
     Read the DBT manifest and import models as datasets with metrics.
@@ -95,7 +95,7 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
                     {
                         "expression": get_metric_expression(metric),
                         "metric_name": metric["name"],
-                        "metric_type": metric["type"],
+                        "metric_type": metric["calculation_method"],
                         "verbose_name": metric["label"],
                         "description": metric["description"],
                         **metric["meta"],
