@@ -50,9 +50,15 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
 
     # extract metrics
     metrics: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
-    for metric in manifest["metrics"].values():
-        for unique_id in metric["depends_on"]["nodes"]:
-            metrics[unique_id].append(metric)
+    all_metrics = manifest["metrics"].values()
+    for metric in all_metrics:
+        if metric["calculation_method"] == "derived":
+            derived_metric_unique_id = metric["depends_on"]["nodes"][0]
+            derived_model_unique_id = next(m["depends_on"]["nodes"][0] for m in all_metrics if m['unique_id'] == derived_metric_unique_id)
+            unique_id = derived_model_unique_id
+        else:
+            unique_id = metric["depends_on"]["nodes"][0]
+        metrics[unique_id].append(metric)
 
     # add datasets
     datasets = []
@@ -96,10 +102,12 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
         dataset_metrics = [
         ]
         if config["resource_type"] == "model":
-            for metric in metrics[config["unique_id"]]:
+            model_metrics = metrics[config["unique_id"]]
+            for metric in model_metrics:
+                expression = get_metric_expression(metric, dataset_metrics=model_metrics)
                 dataset_metrics.append(
                     {
-                        "expression": get_metric_expression(metric, dataset_metrics=dataset_metrics),
+                        "expression": expression,
                         "metric_name": metric["name"],
                         "metric_type": metric["calculation_method"],
                         "verbose_name": metric["label"],
@@ -107,6 +115,7 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
                         **metric["meta"],
                     },
                 )
+                _logger.info("Updating metric %s: %s", metric["name"], expression)
 
         # update dataset clearing metrics...
         update = {
