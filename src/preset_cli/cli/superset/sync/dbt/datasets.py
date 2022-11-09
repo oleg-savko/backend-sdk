@@ -19,11 +19,17 @@ from yarl import URL
 _logger = logging.getLogger(__name__)
 
 
-def get_metric_expression(metric: Dict[str, Any]) -> str:
+def get_metric_expression(metric: Dict[str, Any], dataset_metrics: List[Dict[str, Any]]) -> str:
     """
     Return a SQL expression for a given DBT metric.
     """
-    return "{calculation_method}({expression})".format(**metric)
+    if metric["calculation_method"] == "derived":
+        metric_expression: str = metric["expression"]
+        for m in dataset_metrics:
+            metric_expression = metric_expression.replace(m["name"], "{calculation_method}({expression})".format(**m))
+        return metric_expression
+    else:
+        return "{calculation_method}({expression})".format(**metric)
 
 
 def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
@@ -93,7 +99,7 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
             for metric in metrics[config["unique_id"]]:
                 dataset_metrics.append(
                     {
-                        "expression": get_metric_expression(metric),
+                        "expression": get_metric_expression(metric, dataset_metrics=dataset_metrics),
                         "metric_name": metric["name"],
                         "metric_type": metric["calculation_method"],
                         "verbose_name": metric["label"],
