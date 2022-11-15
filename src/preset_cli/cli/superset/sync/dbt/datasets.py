@@ -71,12 +71,14 @@ def sync_datasets(  # pylint: disable=too-many-locals, too-many-branches
 
         filters = {
             "database": OneToMany(database["id"]),
-            "schema": config["schema"],
+            # "schema": config["schema"],
             "table_name": config["name"],
         }
         existing = client.get_datasets(**filters)
         if len(existing) > 1:
+            print(existing)
             raise Exception("More than one dataset found")
+            
 
         if existing:
             dataset = existing[0]
